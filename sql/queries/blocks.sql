@@ -20,5 +20,14 @@ SELECT height FROM blocks WHERE hash = $1;
 -- name: GetBlockHashByHeight :one
 SELECT hash FROM blocks WHERE height = $1;
 
+-- name: GetBlockCount :one
+SELECT COUNT(*)::bigint FROM blocks;
+
+-- name: GetTransactionCount :one
+SELECT COUNT(*)::bigint FROM transactions;
+
+-- name: GetAddressTxCount :one
+SELECT COUNT(*)::bigint FROM address_txs WHERE address = $1;
+
 -- name: GetLatestBlockHeight :one
 SELECT CAST(COALESCE(MAX(height), 0) AS BIGINT) FROM blocks;

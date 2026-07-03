@@ -65,13 +65,16 @@ func (h *handler) getBlocks(c *fiber.Ctx) error {
 	page, limit := parsePagination(c)
 	offset := (page - 1) * limit
 
-	var height int64
-	height, err := h.db.GetLatestBlockHeight(context.Background())
-	if err != nil {
-		height = 0
+	ctx := context.Background()
+
+	tipHeight, _ := h.db.GetLatestBlockHeight(ctx)
+	totalCount, _ := h.db.GetBlockCount(ctx)
+	totalPages := int(totalCount) / limit
+	if int(totalCount)%limit > 0 {
+		totalPages++
 	}
 
-	blocks, err := h.db.GetLatestBlocks(context.Background(), repository.GetLatestBlocksParams{
+	blocks, err := h.db.GetLatestBlocks(ctx, repository.GetLatestBlocksParams{
 		Limit:  int32(limit),
 		Offset: int32(offset),
 	})
@@ -81,12 +84,12 @@ func (h *handler) getBlocks(c *fiber.Ctx) error {
 
 	items := make([]*BlockResponse, 0, len(blocks))
 	for _, b := range blocks {
-		items = append(items, toBlockResponse(b, height))
+		items = append(items, toBlockResponse(b, tipHeight))
 	}
 
 	return c.JSON(fiber.Map{
 		"page":        page,
-		"totalPages":  1,
+		"totalPages":  totalPages,
 		"itemsOnPage": len(items),
 		"items":       items,
 	})

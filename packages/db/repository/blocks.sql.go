@@ -18,6 +18,17 @@ func (q *Queries) DeleteBlock(ctx context.Context, hash string) error {
 	return err
 }
 
+const getAddressTxCount = `-- name: GetAddressTxCount :one
+SELECT COUNT(*)::bigint FROM address_txs WHERE address = $1
+`
+
+func (q *Queries) GetAddressTxCount(ctx context.Context, address string) (int64, error) {
+	row := q.db.QueryRow(ctx, getAddressTxCount, address)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const getBlockByHash = `-- name: GetBlockByHash :one
 SELECT hash, height, prev_hash, merkle_root, time, bits, nonce, size, weight, version, difficulty, chainwork, tx_count, created_at FROM blocks WHERE hash = $1
 `
@@ -68,6 +79,17 @@ func (q *Queries) GetBlockByHeight(ctx context.Context, height int64) (Block, er
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const getBlockCount = `-- name: GetBlockCount :one
+SELECT COUNT(*)::bigint FROM blocks
+`
+
+func (q *Queries) GetBlockCount(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, getBlockCount)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const getBlockHashByHeight = `-- name: GetBlockHashByHeight :one
@@ -145,6 +167,17 @@ func (q *Queries) GetLatestBlocks(ctx context.Context, arg GetLatestBlocksParams
 		return nil, err
 	}
 	return items, nil
+}
+
+const getTransactionCount = `-- name: GetTransactionCount :one
+SELECT COUNT(*)::bigint FROM transactions
+`
+
+func (q *Queries) GetTransactionCount(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, getTransactionCount)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const insertBlock = `-- name: InsertBlock :exec

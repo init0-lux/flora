@@ -59,6 +59,13 @@ func (h *handler) getAddressTxs(c *fiber.Ctx) error {
 	offset := (page - 1) * limit
 
 	ctx := context.Background()
+
+	totalCount, _ := h.db.GetAddressTxCount(ctx, address)
+	totalPages := int(totalCount) / limit
+	if int(totalCount)%limit > 0 {
+		totalPages++
+	}
+
 	items, err := h.db.GetAddressTxs(ctx, repository.GetAddressTxsParams{
 		Address: address,
 		Limit:   int32(limit),
@@ -88,6 +95,6 @@ func (h *handler) getAddressTxs(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"page": page, "totalPages": 1, "itemsOnPage": len(txItems), "items": txItems,
-	})
+			"page": page, "totalPages": totalPages, "itemsOnPage": len(txItems), "items": txItems,
+		})
 }

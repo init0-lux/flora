@@ -197,14 +197,14 @@ export async function getAddressTransactions(
   page: number;
   hasMore: boolean;
 }> {
-  const res = await fetchJSON<PaginatedItems<TransactionResponse>>(
+  const res = await fetchJSON<any>(
     `/api/v1/address/${address}/txs?page=${page}&limit=${pageSize}`,
   );
   return {
     items: res.items,
     totalCount: res.itemsOnPage,
     page,
-    hasMore: false,
+    hasMore: page * pageSize < (res.totalPages || 0) * pageSize,
   };
 }
 
