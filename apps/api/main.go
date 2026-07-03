@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log/slog"
@@ -18,7 +19,43 @@ import (
 	"github.com/init0/flora/packages/flo"
 	"github.com/init0/flora/packages/logger"
 	"github.com/init0/flora/packages/shared"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+var (
+	httpRequestsTotal = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "fiber_requests_total",
+			Help: "Total number of HTTP requests.",
+		},
+		[]string{"method", "path", "status"},
+	)
+	httpRequestDuration = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "fiber_request_duration_seconds",
+			Help:    "HTTP request duration in seconds.",
+			Buckets: prometheus.DefBuckets,
+		},
+		[]string{"method", "path"},
+	)
+	blockHeightGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "flora_block_height",
+		Help: "Current block height from the FLO node.",
+	})
+	mempoolSizeGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "flora_mempool_size",
+		Help: "Number of transactions in the mempool.",
+	})
+	dbConnectionsGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "flora_db_connections",
+		Help: "Number of active database connections.",
+	})
+)
+
+func init() {
+	prometheus.MustRegister(httpRequestsTotal, httpRequestDuration, blockHeightGauge, mempoolSizeGauge, dbConnectionsGauge)
+}
 
 func main() {
 	cfg, err := config.Load()
@@ -65,6 +102,29 @@ func main() {
 		return c.Next()
 	})
 
+	// Prometheus metrics middleware
+	app.Use(func(c *fiber.Ctx) error {
+		start := time.Now()
+		err := c.Next()
+		dur := time.Since(start).Seconds()
+		httpRequestsTotal.WithLabelValues(c.Method(), c.Path(), fmt.Sprintf("%d", c.Response().StatusCode())).Inc()
+		httpRequestDuration.WithLabelValues(c.Method(), c.Path()).Observe(dur)
+		return err
+	})
+
+	// Background metrics updater
+	go func() {
+		for {
+			time.Sleep(30 * time.Second)
+			info, err := floClient.GetBlockchainInfo(context.Background())
+			if err == nil {
+				blockHeightGauge.Set(float64(info.Blocks))
+			}
+			poolStat := pool.Pool.Stat()
+			dbConnectionsGauge.Set(float64(poolStat.TotalConns()))
+		}
+	}()
+
 	q := repository.New(pool.Pool)
 	h := &handler{
 		log:  log,
@@ -74,6 +134,7 @@ func main() {
 	}
 
 	app.Get("/health", h.health)
+	app.Get("/metrics", h.metrics)
 	app.Get("/api/v1/status", h.status)
 
 	app.Get("/api/v1/block/:hash", h.getBlockByHash)
@@ -125,6 +186,31 @@ type handler struct {
 
 func (h *handler) health(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"status": "ok"})
+}
+
+func (h *handler) metrics(c *fiber.Ctx) error {
+	c.Response().Header.SetContentType("text/plain; version=0.0.4; charset=utf-8")
+	metricFamilies, err := prometheus.DefaultGatherer.Gather()
+	if err != nil {
+		return err
+	}
+	var buf bytes.Buffer
+	for _, mf := range metricFamilies {
+		for _, m := range mf.GetMetric() {
+			buf.WriteString(mf.GetName())
+			// Simplified — just output the name and value
+			buf.WriteString(" ")
+			if m.Counter != nil {
+				buf.WriteString(fmt.Sprintf("%v\n", m.Counter.GetValue()))
+			} else if m.Gauge != nil {
+				buf.WriteString(fmt.Sprintf("%v\n", m.Gauge.GetValue()))
+			} else if m.Histogram != nil {
+				buf.WriteString(fmt.Sprintf("%v\n", m.Histogram.GetSampleCount()))
+			}
+		}
+	}
+	c.Response().SetBody(buf.Bytes())
+	return nil
 }
 
 func (h *handler) status(c *fiber.Ctx) error {

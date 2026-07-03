@@ -1,0 +1,50 @@
+{
+  "title": "FLO Explorer — API",
+  "uid": "flora_api",
+  "schemaVersion": 39,
+  "version": 1,
+  "timezone": "browser",
+  "refresh": "15s",
+  "panels": [
+    {
+      "title": "HTTP Requests",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        { "expr": "rate(fiber_requests_total[1m])", "legendFormat": "{{method}} {{path}}" }
+      ]
+    },
+    {
+      "title": "Request Duration (p99)",
+      "type": "graph",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        { "expr": "histogram_quantile(0.99, rate(fiber_request_duration_seconds_bucket[1m]))", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "title": "Postgres Connections",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 8 },
+      "targets": [
+        { "expr": "pg_stat_database_numbackends", "legendFormat": "connections" }
+      ]
+    },
+    {
+      "title": "Block Height",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 8 },
+      "targets": [
+        { "expr": "fiber_blocks_total", "legendFormat": "blocks" }
+      ]
+    },
+    {
+      "title": "Mempool Size",
+      "type": "stat",
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 8 },
+      "targets": [
+        { "expr": "fiber_mempool_size", "legendFormat": "txns" }
+      ]
+    }
+  ]
+}

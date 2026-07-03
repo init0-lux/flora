@@ -141,8 +141,51 @@ services:
     logging: *default-logging
     restart: unless-stopped
 
+  prometheus:
+    image: prom/prometheus:v3.2.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deployments/docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--storage.tsdb.retention.time=30d"
+    logging: *default-logging
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_INSTALL_PLUGINS: ""
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./deployments/docker/grafana-datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml:ro
+      - ./deployments/docker/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ./deployments/docker/grafana-dashboard.json:/var/lib/grafana/dashboards/flora-api.json:ro
+    logging: *default-logging
+    restart: unless-stopped
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.17.1
+    environment:
+      DATA_SOURCE_NAME: postgres://flora:${POSTGRES_PASSWORD:-flora}@postgres:5432/flora?sslmode=disable
+    logging: *default-logging
+    restart: unless-stopped
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.70.0
+    environment:
+      REDIS_ADDR: redis://redis:6379
+    logging: *default-logging
+    restart: unless-stopped
+
 volumes:
   postgres-data:
   redis-data:
   nats-data:
   nginx-logs:
+  prometheus-data:
+  grafana-data:
