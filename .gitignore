@@ -1,24 +1,39 @@
-
-# Environment.env
+# Environment
 .env.*
-!.env.example# Gobin/
+!.env.example
+
+# Go
+bin/
 dist/
 cover.out
 coverage.out
 *.test
 *.prof
-.gopath/# Nodenode_modules/
+.gopath/
+
+# Node
+node_modules/
 .next/
 out/
 .turbo/
 .pnpm/
-pnpm-debug.log# Logs*.log
-logs/# Database*.db
-*.sqlite
-*.sqlite3# IDE.vscode/
-.idea/
-*.swp# macOS
+pnpm-debug.log
 
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# macOS
 .DS_Store
 
 # Nix
