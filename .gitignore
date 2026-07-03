@@ -1,0 +1,40 @@
+
+# Environment.env
+.env.*
+!.env.example# Gobin/
+dist/
+cover.out
+coverage.out
+*.test
+*.prof
+.gopath/# Nodenode_modules/
+.next/
+out/
+.turbo/
+.pnpm/
+pnpm-debug.log# Logs*.log
+logs/# Database*.db
+*.sqlite
+*.sqlite3# IDE.vscode/
+.idea/
+*.swp# macOS
+
+.DS_Store
+
+# Nix
+result
+.direnv/
+
+# Docker
+docker-data/
+postgres-data/
+redis-data/
+nats-data/
+
+# Generated
+gen/
+openapi/
+tmp/
+
+*.bak
+*.tmp
