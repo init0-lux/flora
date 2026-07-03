@@ -20,7 +20,7 @@
           config.allowUnfree = true;
         };
 
-        floBin = "${self}/vendor/flo";
+        floBin = "${self}/external/flo";
       in
       {
         devShells.default = pkgs.mkShell {
@@ -81,7 +81,7 @@
             export PNPM_HOME="$PWD/.pnpm"
             export PATH="$PNPM_HOME:$PATH"
 
-            export PATH="$PWD/vendor/flo:$PATH"
+            export PATH="$PWD/external/flo:$PATH"
 
             export CGO_ENABLED=1
 

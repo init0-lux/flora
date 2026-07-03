@@ -211,25 +211,57 @@ func convertBlock(block *flo.Block) models.BlockConnected {
 		TxCount:    int64(len(block.Tx)),
 	}
 
-	event.Transactions = make([]models.Transaction, 0)
-	// Tx can be either []string (verbosity 1) or []Transaction (verbosity 2).
-	// We request verbosity 2 (GetBlock), so it should be full transaction objects.
-	event.Transactions = extractTxs(block)
+	event.Transactions = extractBlockTxs(block)
 	return event
 }
 
-// extractTxs attempts to parse transactions from a block's raw Tx field.
-func extractTxs(block *flo.Block) []models.Transaction {
-	// If Tx is empty or null, return empty.
+// extractBlockTxs unmarshals the raw Tx field from the FLO RPC response
+// into flo.Transaction objects, then converts them to models.Transaction.
+func extractBlockTxs(block *flo.Block) []models.Transaction {
 	if len(block.Tx) == 0 {
 		return nil
 	}
 
-	// Try as full transaction objects first
-	var txs []models.Transaction
-	if err := json.Unmarshal(block.Tx, &txs); err == nil {
-		return txs
+	var floTxs []flo.Transaction
+	if err := json.Unmarshal(block.Tx, &floTxs); err != nil {
+		return nil
 	}
 
-	return nil
+	txs := make([]models.Transaction, 0, len(floTxs))
+	for _, ftx := range floTxs {
+		mtx := models.Transaction{
+			TxID:  ftx.TxID,
+			Hash:  ftx.Hash,
+			Size:  ftx.Size,
+			VSize: ftx.VSize,
+		}
+
+		for _, fvin := range ftx.Vin {
+			mvin := models.Vin{
+				Coinbase: fvin.Coinbase,
+				TxID:     fvin.TxID,
+				Vout:     fvin.Vout,
+				Sequence: fvin.Sequence,
+			}
+			if fvin.ScriptSig != nil {
+				mvin.ScriptSig = fvin.ScriptSig.Hex
+			}
+			mtx.Vin = append(mtx.Vin, mvin)
+		}
+
+		for _, fvout := range ftx.Vout {
+			mvout := models.Vout{
+				Value: int64(fvout.Value * 1e8),
+				N:     fvout.N,
+			}
+			mvout.ScriptPubKeyHex = fvout.ScriptPubKey.Hex
+			mvout.ScriptPubKeyType = fvout.ScriptPubKey.Type
+			mvout.Addresses = fvout.ScriptPubKey.Addresses
+			mtx.Vout = append(mtx.Vout, mvout)
+		}
+
+		txs = append(txs, mtx)
+	}
+
+	return txs
 }

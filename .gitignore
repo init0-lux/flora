@@ -1,5 +1,5 @@
 # Environment
-.env.*
+.env*
 !.env.example
 
 # Go
@@ -56,4 +56,4 @@ tmp/
 
 # Flo blockchain
 data/
-vendor/flo/flo*
+external/flo/flo*

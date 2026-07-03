@@ -15,8 +15,13 @@ import {
   Settings,
   Moon,
 } from "lucide-react";
-import { getNetworkStats, getMempoolInfo } from "@/lib/flo-api";
-import { formatNumber } from "@/lib/utils";
+import {
+  getNetworkStats,
+  getMempoolInfo,
+  getRecentBlocks,
+  getRecentTransactions,
+} from "@/lib/flo-api";
+import { formatNumber, timeAgo, truncateHash } from "@/lib/utils";
 
 export default function HomePage() {
   const router = useRouter();
@@ -32,6 +37,18 @@ export default function HomePage() {
     queryKey: ["mempoolInfo"],
     queryFn: getMempoolInfo,
     refetchInterval: 15_000,
+  });
+
+  const { data: recentBlocks } = useQuery({
+    queryKey: ["recentBlocks"],
+    queryFn: () => getRecentBlocks(4),
+    refetchInterval: 10_000,
+  });
+
+  const { data: recentTxs } = useQuery({
+    queryKey: ["recentTxs"],
+    queryFn: () => getRecentTransactions(4),
+    refetchInterval: 10_000,
   });
 
   const handleSearch = useCallback(
@@ -63,9 +80,34 @@ export default function HomePage() {
 
   const chainInfo = stats?.chainInfo;
   const height = stats?.bestHeight ?? 5291042;
-  const difficulty = chainInfo ? Math.round(chainInfo.difficulty) : 1402200;
+  const difficulty = chainInfo ? chainInfo.difficulty.toFixed(4) : "—";
   const peerCount = stats?.peerCount ?? 182;
   const mempoolSize = mempool?.size ?? 1204;
+
+  const blocks =
+    recentBlocks?.map((b) => ({
+      height: b.height,
+      hash: truncateHash(b.hash, 6),
+      age: timeAgo(b.time),
+      txns: b.txCount,
+      reward: "-",
+    })) ?? [];
+
+  const txs =
+    recentTxs?.map((t) => ({
+      hash: truncateHash(t.txid, 4),
+      fullHash: t.txid,
+      age: timeAgo(t.blockTime),
+      from: t.coinbase
+        ? "Coinbase"
+        : truncateHash(t.vin?.[0]?.txid ?? "", 4) || "—",
+      to: truncateHash(t.vout?.[0]?.addresses?.[0] ?? "", 6) || "—",
+      value: t.vout?.length
+        ? t.vout
+            .reduce((s, v) => s + parseFloat(v.value || "0"), 0)
+            .toFixed(4) + " FLO"
+        : "—",
+    })) ?? [];
 
   return (
     <div
@@ -130,11 +172,7 @@ export default function HomePage() {
             label="LATEST BLOCK"
             value={formatNumber(height)}
           />
-          <MetricCard
-            icon={TrendingUp}
-            label="HEIGHT"
-            value={`${(difficulty / 1000000).toFixed(1)} m`}
-          />
+          <MetricCard icon={TrendingUp} label="DIFFICULTY" value={difficulty} />
           <MetricCard icon={Database} label="TOTAL SUPPLY" value="162.4M FLO" />
           <MetricCard
             icon={Gauge}
@@ -471,69 +509,3 @@ function FooterLink({
     </Link>
   );
 }
-
-const blocks = [
-  {
-    height: 5291042,
-    hash: "0x8a1...d9f",
-    age: "12s ago",
-    txns: 142,
-    reward: "6.25 FLO",
-  },
-  {
-    height: 5291041,
-    hash: "0xb2e...44a",
-    age: "24s ago",
-    txns: 98,
-    reward: "6.25 FLO",
-  },
-  {
-    height: 5291040,
-    hash: "0xc11...8bb",
-    age: "36s ago",
-    txns: 215,
-    reward: "6.25 FLO",
-  },
-  {
-    height: 5291039,
-    hash: "0x992...32c",
-    age: "48s ago",
-    txns: 56,
-    reward: "6.25 FLO",
-  },
-];
-
-const txs = [
-  {
-    hash: "0x4a1...29d",
-    fullHash: "0x4a1",
-    age: "8s ago",
-    from: "0x123...abc",
-    to: "0xde4...fgh",
-    value: "14.22 FLO",
-  },
-  {
-    hash: "0x88c...1a2",
-    fullHash: "0x88c",
-    age: "15s ago",
-    from: "0xa21...332",
-    to: "0x992...32c",
-    value: "0.50 FLO",
-  },
-  {
-    hash: "0xf2a...001",
-    fullHash: "0xf2a",
-    age: "22s ago",
-    from: "0x771...bb8",
-    to: "0x111...eee",
-    value: "1,200.00 FLO",
-  },
-  {
-    hash: "0x33e...f11",
-    fullHash: "0x33e",
-    age: "31s ago",
-    from: "0x882...aaa",
-    to: "0x009...zzz",
-    value: "5.00 FLO",
-  },
-];
