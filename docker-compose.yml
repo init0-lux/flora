@@ -1,3 +1,9 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -5,15 +11,17 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: flora
-      POSTGRES_PASSWORD: flora
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-flora}
       POSTGRES_DB: flora
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U flora"]
-      interval: 5s
-      timeout: 3s
+      interval: 10s
+      timeout: 5s
       retries: 5
+    logging: *default-logging
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
@@ -23,9 +31,11 @@ services:
       - redis-data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
+      interval: 10s
+      timeout: 5s
       retries: 5
+    logging: *default-logging
+    restart: unless-stopped
 
   nats:
     image: nats:2-alpine
@@ -37,11 +47,102 @@ services:
       - nats-data:/data
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8222/healthz || exit 1"]
-      interval: 5s
-      timeout: 3s
+      interval: 10s
+      timeout: 5s
       retries: 5
+    logging: *default-logging
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: deployments/docker/Dockerfile.api
+    ports:
+      - "3099:3099"
+    environment:
+      APP_NAME: flora
+      LOG_LEVEL: info
+      FLO_RPC_URL: ${FLO_RPC_URL}
+      FLO_RPC_USER: ${FLO_RPC_USER}
+      FLO_RPC_PASS: ${FLO_RPC_PASS}
+      DATABASE_URL: postgres://flora:${POSTGRES_PASSWORD:-flora}@postgres:5432/flora?sslmode=disable
+      REDIS_URL: redis://redis:6379
+      NATS_URL: nats://nats:4222
+      API_HOST: 0.0.0.0
+      API_PORT: "3099"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    logging: *default-logging
+    restart: unless-stopped
+
+  chain-indexer:
+    build:
+      context: .
+      dockerfile: deployments/docker/Dockerfile.chain-indexer
+    environment:
+      APP_NAME: flora
+      LOG_LEVEL: info
+      FLO_RPC_URL: ${FLO_RPC_URL}
+      FLO_RPC_USER: ${FLO_RPC_USER}
+      FLO_RPC_PASS: ${FLO_RPC_PASS}
+      NATS_URL: nats://nats:4222
+    depends_on:
+      nats:
+        condition: service_healthy
+    logging: *default-logging
+    restart: unless-stopped
+
+  state-writer:
+    build:
+      context: .
+      dockerfile: deployments/docker/Dockerfile.state-writer
+    environment:
+      APP_NAME: flora
+      LOG_LEVEL: info
+      DATABASE_URL: postgres://flora:${POSTGRES_PASSWORD:-flora}@postgres:5432/flora?sslmode=disable
+      NATS_URL: nats://nats:4222
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    logging: *default-logging
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: apps/frontend
+      dockerfile: ../../deployments/docker/Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://api:3099
+    depends_on:
+      - api
+    logging: *default-logging
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deployments/docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - nginx-logs:/var/log/nginx
+    depends_on:
+      - api
+      - frontend
+    logging: *default-logging
+    restart: unless-stopped
 
 volumes:
   postgres-data:
   redis-data:
   nats-data:
+  nginx-logs:
