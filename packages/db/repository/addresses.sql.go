@@ -7,8 +7,6 @@ package repository
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const deleteAddressTxsByTxid = `-- name: DeleteAddressTxsByTxid :exec
@@ -39,7 +37,7 @@ func (q *Queries) GetAddressBalance(ctx context.Context, address string) (Addres
 }
 
 const getAddressTxs = `-- name: GetAddressTxs :many
-SELECT t.txid, t.hash, t.block_hash, t.block_height, t.block_time, t.size, t.vsize, t.version, t.locktime, t.coinbase, t.created_at, a.tx_type, a.block_height, a.block_time
+SELECT t.txid, t.hash, t.block_hash, t.block_height, t.block_time, t.size, t.vsize, t.version, t.locktime, t.coinbase
 FROM address_txs a
 JOIN transactions t ON t.txid = a.txid
 WHERE a.address = $1
@@ -54,20 +52,16 @@ type GetAddressTxsParams struct {
 }
 
 type GetAddressTxsRow struct {
-	Txid          string
-	Hash          string
-	BlockHash     string
-	BlockHeight   int64
-	BlockTime     int64
-	Size          int64
-	Vsize         int64
-	Version       int64
-	Locktime      int64
-	Coinbase      bool
-	CreatedAt     pgtype.Timestamptz
-	TxType        string
-	BlockHeight_2 int64
-	BlockTime_2   int64
+	Txid        string
+	Hash        string
+	BlockHash   string
+	BlockHeight int64
+	BlockTime   int64
+	Size        int64
+	Vsize       int64
+	Version     int64
+	Locktime    int64
+	Coinbase    bool
 }
 
 func (q *Queries) GetAddressTxs(ctx context.Context, arg GetAddressTxsParams) ([]GetAddressTxsRow, error) {
@@ -90,10 +84,6 @@ func (q *Queries) GetAddressTxs(ctx context.Context, arg GetAddressTxsParams) ([
 			&i.Version,
 			&i.Locktime,
 			&i.Coinbase,
-			&i.CreatedAt,
-			&i.TxType,
-			&i.BlockHeight_2,
-			&i.BlockTime_2,
 		); err != nil {
 			return nil, err
 		}

@@ -21,4 +21,4 @@ SELECT height FROM blocks WHERE hash = $1;
 SELECT hash FROM blocks WHERE height = $1;
 
 -- name: GetLatestBlockHeight :one
-SELECT COALESCE(MAX(height), 0) FROM blocks;
+SELECT CAST(COALESCE(MAX(height), 0) AS BIGINT) FROM blocks;

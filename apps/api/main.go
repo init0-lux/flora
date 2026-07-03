@@ -76,6 +76,22 @@ func main() {
 	app.Get("/health", h.health)
 	app.Get("/api/v1/status", h.status)
 
+	app.Get("/api/v1/block/:hash", h.getBlockByHash)
+	app.Get("/api/v1/block-height/:height", h.getBlockByHeight)
+	app.Get("/api/v1/blocks", h.getBlocks)
+
+	app.Get("/api/v1/tx/:txid", h.getTx)
+	app.Get("/api/v1/block/:hash/txs", h.getBlockTxs)
+
+	app.Get("/api/v1/address/:address", h.getAddress)
+	app.Get("/api/v1/address/:address/txs", h.getAddressTxs)
+	app.Get("/api/v1/utxo/:address", h.getUtxos)
+
+	app.Get("/api/v1/mempool", h.getMempool)
+	app.Get("/api/v1/mempool/:txid", h.getMempoolTx)
+
+	app.Get("/api/v1/search/:query", h.search)
+
 	addr := cfg.APIHost + ":" + itoa(cfg.APIPort)
 
 	go func() {

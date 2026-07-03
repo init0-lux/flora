@@ -22,7 +22,7 @@ ON CONFLICT (address) DO UPDATE SET
     updated_at = NOW();
 
 -- name: GetAddressTxs :many
-SELECT t.*, a.tx_type, a.block_height, a.block_time
+SELECT t.txid, t.hash, t.block_hash, t.block_height, t.block_time, t.size, t.vsize, t.version, t.locktime, t.coinbase
 FROM address_txs a
 JOIN transactions t ON t.txid = a.txid
 WHERE a.address = $1

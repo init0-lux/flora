@@ -93,14 +93,14 @@ func (q *Queries) GetBlockHeightByHash(ctx context.Context, hash string) (int64,
 }
 
 const getLatestBlockHeight = `-- name: GetLatestBlockHeight :one
-SELECT COALESCE(MAX(height), 0) FROM blocks
+SELECT CAST(COALESCE(MAX(height), 0) AS BIGINT) FROM blocks
 `
 
-func (q *Queries) GetLatestBlockHeight(ctx context.Context) (interface{}, error) {
+func (q *Queries) GetLatestBlockHeight(ctx context.Context) (int64, error) {
 	row := q.db.QueryRow(ctx, getLatestBlockHeight)
-	var coalesce interface{}
-	err := row.Scan(&coalesce)
-	return coalesce, err
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const getLatestBlocks = `-- name: GetLatestBlocks :many
