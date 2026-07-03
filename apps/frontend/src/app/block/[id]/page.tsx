@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getBlockByHash, getBlockByHeight } from "@/lib/flo-api";
-import type { BlockResponse } from "@/lib/flo-api";
+import type { BlockResponse, TransactionResponse } from "@/lib/flo-api";
 import { formatNumber, formatDate } from "@/lib/utils";
 
 export default function BlockDetailPage() {
@@ -22,6 +22,19 @@ export default function BlockDetailPage() {
     queryKey: ["block", id],
     queryFn,
   });
+
+  const { data: blockTxs } = useQuery({
+    queryKey: ["blockTxs", block?.hash],
+    queryFn: () =>
+      fetch(`http://127.0.0.1:3099/api/v1/block/${block?.hash}/txs`).then((r) =>
+        r.json(),
+      ) as Promise<{
+        items: TransactionResponse[];
+      }>,
+    enabled: !!block?.hash,
+  });
+
+  const txs = blockTxs?.items ?? [];
 
   if (!block) {
     return (
@@ -266,18 +279,22 @@ export default function BlockDetailPage() {
                 <thead className="bg-surface-container-low border-b border-outline-variant sticky top-0">
                   <tr>
                     <Th>TX Hash</Th>
-                    <Th>Method</Th>
-                    <Th>From / To</Th>
-                    <Th align="right">Amount</Th>
-                    <Th align="right">Fee (Sats)</Th>
+                    <Th>Type</Th>
+                    <Th align="right">Total Value</Th>
+                    <Th align="right">Confirmations</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant/30">
-                  {(block.transactions ?? []).slice(0, 25).map((txid, i) => {
-                    const isCoinbase = i === 0;
+                  {txs.map((tx) => {
+                    const isCoinbase = tx.coinbase;
+                    const totalValue =
+                      tx.vout?.reduce(
+                        (s, v) => s + parseFloat(v.value || "0"),
+                        0,
+                      ) || 0;
                     return (
                       <tr
-                        key={txid}
+                        key={tx.txid}
                         className="hover:bg-secondary-container/10 transition-colors group cursor-pointer"
                       >
                         <td className="px-4 py-4">
@@ -309,10 +326,23 @@ export default function BlockDetailPage() {
                               )}
                             </svg>
                             <Link
-                              href={`/tx/${txid}`}
-                              className="font-mono text-[13px] font-semibold text-primary hover:underline"
+                              href={`/tx/${tx.txid}`}
+                              className="group flex items-center gap-1"
                             >
-                              {txid.slice(0, 8)}...{txid.slice(-4)}
+                              <span className="font-mono text-[13px] font-semibold text-primary hover:underline">
+                                {tx.txid.slice(0, 8)}...{tx.txid.slice(-4)}
+                              </span>
+                              <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <svg
+                                  className="h-3 w-3 text-outline animate-pulse"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                >
+                                  <path d="M7 17l9.2-9.2M17 17V7H7" />
+                                </svg>
+                              </span>
                             </Link>
                           </div>
                         </td>
@@ -327,37 +357,11 @@ export default function BlockDetailPage() {
                             {isCoinbase ? "Coinbase" : "Transfer"}
                           </span>
                         </td>
-                        <td className="px-4 py-4">
-                          <div className="flex flex-col gap-0.5">
-                            <div className="flex items-center gap-2 text-xs">
-                              <span className="text-outline w-12 uppercase text-[10px]">
-                                From
-                              </span>
-                              <span className="text-outline">
-                                {isCoinbase
-                                  ? "Newly Minted"
-                                  : `flo1${txid.slice(4, 8)}...${txid.slice(-4)}`}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs">
-                              <span className="text-outline w-12 uppercase text-[10px]">
-                                To
-                              </span>
-                              <span className="text-[11px] font-semibold font-mono">
-                                flo1{txid.slice(8, 12)}...{txid.slice(-4)}
-                              </span>
-                            </div>
-                          </div>
+                        <td className="px-4 py-4 text-xs text-outline font-mono">
+                          {totalValue.toFixed(4)} FLO
                         </td>
-                        <td className="px-4 py-4 text-right">
-                          <span className="font-bold text-on-surface text-sm">
-                            {(Math.random() * 10 + 0.05).toFixed(8)} FLO
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-right text-outline text-xs">
-                          {isCoinbase
-                            ? "0.000"
-                            : String(Math.floor(Math.random() * 15000) + 100)}
+                        <td className="px-4 py-4 text-right text-xs text-outline">
+                          {formatNumber(tx.confirmations)}
                         </td>
                       </tr>
                     );

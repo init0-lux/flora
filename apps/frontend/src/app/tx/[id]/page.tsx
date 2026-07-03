@@ -46,7 +46,7 @@ export default function TransactionDetailPage() {
     (sum, vout) => sum + parseFloat(vout.value),
     0,
   );
-  const fee = 0; // tx fee not available from API
+  const fee = 0; // tx fee not available from API directly — compute from input - output when inputs have values
   const FLO_TO_SAT = 100_000_000;
   const feeSats = fee * FLO_TO_SAT;
   const feeRate = tx.vsize > 0 ? (feeSats / tx.vsize).toFixed(1) : "0";
@@ -108,18 +108,20 @@ export default function TransactionDetailPage() {
         <section className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <SummaryTile label="FEES">
             <div className="text-xl font-semibold font-mono text-primary">
-              -
+              {tx.coinbase ? "—" : "—"}
             </div>
-            <div className="text-xs text-outline">{feeRate} sat/vB</div>
+            <div className="text-xs text-outline">
+              {tx.coinbase ? "Coinbase" : "—"}
+            </div>
           </SummaryTile>
           <SummaryTile label="SIZE">
             <div className="text-xl font-semibold font-mono text-primary">
               {tx.size} B
             </div>
           </SummaryTile>
-          <SummaryTile label="WEIGHT">
+          <SummaryTile label="VSIZE">
             <div className="text-xl font-semibold font-mono text-primary">
-              {0} WU
+              {tx.vsize} vB
             </div>
           </SummaryTile>
           <SummaryTile label="TIMESTAMP">
@@ -177,7 +179,7 @@ export default function TransactionDetailPage() {
                 </svg>
               </div>
               <div className="text-xs font-mono font-semibold text-on-surface-variant">
-                {formatFloShort("0")}
+                {tx.coinbase ? "0.0000 FLO" : "—"}
               </div>
             </div>
             <div className="flex-1 flex flex-col items-start gap-2">
@@ -199,7 +201,7 @@ export default function TransactionDetailPage() {
                 INPUTS
               </h2>
               <span className="text-xs text-outline">
-                Total: {formatFloShort(totalInput.toString())}
+                {tx.coinbase ? "Newly Minted" : "—"}
               </span>
             </div>
             <div className="space-y-3">
@@ -255,7 +257,7 @@ export default function TransactionDetailPage() {
                 OUTPUTS
               </h2>
               <span className="text-xs text-outline">
-                Total: {formatFloShort(totalOutput.toString())}
+                {formatFloShort(totalOutput.toString())}
               </span>
             </div>
             <div className="space-y-3">

@@ -208,10 +208,11 @@ func convertBlock(block *flo.Block) models.BlockConnected {
 		Difficulty: block.Difficulty,
 		Chainwork:  block.Chainwork,
 		PrevHash:   block.PreviousBlockHash,
-		TxCount:    int64(len(block.Tx)),
+		TxCount:    0,
 	}
 
 	event.Transactions = extractBlockTxs(block)
+	event.TxCount = int64(len(event.Transactions))
 	return event
 }
 
