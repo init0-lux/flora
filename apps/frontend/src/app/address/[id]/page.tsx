@@ -211,7 +211,26 @@ export default function AddressDetailPage() {
                   </thead>
                   <tbody className="divide-y divide-outline-variant">
                     {txs?.items.map((tx) => {
-                      const isIn = Math.random() > 0.5;
+                      const isIn = tx.vin.some((v) =>
+                        v.addresses.some((a) => a === address),
+                      )
+                        ? false
+                        : tx.vout.some((v) =>
+                            v.scriptPubKey.addresses.some((a) => a === address),
+                          );
+                      const amount = isIn
+                        ? tx.vout
+                            .filter((v) =>
+                              v.scriptPubKey.addresses.some(
+                                (a) => a === address,
+                              ),
+                            )
+                            .reduce((s, v) => s + parseFloat(v.value), 0)
+                        : tx.vin
+                            .filter((v) =>
+                              v.addresses.some((a) => a === address),
+                            )
+                            .reduce((s, v) => s + parseFloat(v.value), 0);
                       return (
                         <tr
                           key={tx.txid}
@@ -234,7 +253,7 @@ export default function AddressDetailPage() {
                             {timeAgo(tx.time)}
                           </td>
                           <td className="px-6 py-4 text-sm font-mono font-semibold text-right text-primary">
-                            {formatFloShort(tx.fee)}
+                            {formatFloShort(amount.toString())}
                           </td>
                           <td className="px-6 py-4 text-xs font-mono font-semibold text-right text-on-surface-variant">
                             {tx.fee}
