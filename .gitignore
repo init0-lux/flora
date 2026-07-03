@@ -53,3 +53,7 @@ tmp/
 
 *.bak
 *.tmp
+
+# Flo blockchain
+data/
+vendor/flo/flo*

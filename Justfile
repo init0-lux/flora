@@ -75,6 +75,20 @@ clean:
     go clean -cache
     rm -rf apps/frontend/.next/
 
+flo-init:
+    mkdir -p data/flo
+    cp -n config/flo.conf data/flo/flo.conf
+
+flo:
+    mkdir -p data/flo
+    flod -datadir=$PWD/data/flo
+
+flo-height:
+    flo-cli -datadir=$PWD/data/flo getblockcount
+
+flo-stop:
+    flo-cli -datadir=$PWD/data/flo stop
+
 # Show help
 help:
     @just --list

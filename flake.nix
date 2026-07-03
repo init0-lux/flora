@@ -19,6 +19,8 @@
           inherit system;
           config.allowUnfree = true;
         };
+
+        floBin = "${self}/vendor/flo";
       in
       {
         devShells.default = pkgs.mkShell {
@@ -78,6 +80,8 @@
 
             export PNPM_HOME="$PWD/.pnpm"
             export PATH="$PNPM_HOME:$PATH"
+
+            export PATH="$PWD/vendor/flo:$PATH"
 
             export CGO_ENABLED=1
 
