@@ -27,6 +27,42 @@ func (q *Queries) DeleteTxsByBlockHash(ctx context.Context, blockHash string) er
 	return err
 }
 
+const getRecentTransactions = `-- name: GetRecentTransactions :many
+SELECT txid, hash, block_hash, block_height, block_time, size, vsize, version, locktime, coinbase, created_at FROM transactions ORDER BY block_height DESC, txid LIMIT $1
+`
+
+func (q *Queries) GetRecentTransactions(ctx context.Context, limit int32) ([]Transaction, error) {
+	rows, err := q.db.Query(ctx, getRecentTransactions, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Transaction
+	for rows.Next() {
+		var i Transaction
+		if err := rows.Scan(
+			&i.Txid,
+			&i.Hash,
+			&i.BlockHash,
+			&i.BlockHeight,
+			&i.BlockTime,
+			&i.Size,
+			&i.Vsize,
+			&i.Version,
+			&i.Locktime,
+			&i.Coinbase,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTxByTxid = `-- name: GetTxByTxid :one
 SELECT txid, hash, block_hash, block_height, block_time, size, vsize, version, locktime, coinbase, created_at FROM transactions WHERE txid = $1
 `

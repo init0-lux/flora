@@ -62,7 +62,7 @@ export default function HomePage() {
   }, []);
 
   const chainInfo = stats?.chainInfo;
-  const height = chainInfo?.bestBlockHeight ?? 5291042;
+  const height = stats?.bestHeight ?? 5291042;
   const difficulty = chainInfo ? Math.round(chainInfo.difficulty) : 1402200;
   const peerCount = stats?.peerCount ?? 182;
   const mempoolSize = mempool?.size ?? 1204;

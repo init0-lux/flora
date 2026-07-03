@@ -16,3 +16,6 @@ DELETE FROM transactions WHERE txid = $1;
 
 -- name: DeleteTxsByBlockHash :exec
 DELETE FROM transactions WHERE block_hash = $1;
+
+-- name: GetRecentTransactions :many
+SELECT * FROM transactions ORDER BY block_height DESC, txid LIMIT $1;

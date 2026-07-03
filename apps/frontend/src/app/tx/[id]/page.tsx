@@ -40,15 +40,12 @@ export default function TransactionDetailPage() {
     );
   }
 
-  const totalInput = tx.vin.reduce(
-    (sum, vin) => sum + parseFloat(vin.value),
-    0,
-  );
+  const totalInput = 0; // input values not available from API
   const totalOutput = tx.vout.reduce(
     (sum, vout) => sum + parseFloat(vout.value),
     0,
   );
-  const fee = parseFloat(tx.fee);
+  const fee = 0; // tx fee not available from API
   const FLO_TO_SAT = 100_000_000;
   const feeSats = fee * FLO_TO_SAT;
   const feeRate = tx.vsize > 0 ? (feeSats / tx.vsize).toFixed(1) : "0";
@@ -101,7 +98,7 @@ export default function TransactionDetailPage() {
         <section className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <SummaryTile label="FEES">
             <div className="text-xl font-semibold font-mono text-primary">
-              {formatFloShort(tx.fee)}
+              -
             </div>
             <div className="text-xs text-outline">{feeRate} sat/vB</div>
           </SummaryTile>
@@ -112,24 +109,24 @@ export default function TransactionDetailPage() {
           </SummaryTile>
           <SummaryTile label="WEIGHT">
             <div className="text-xl font-semibold font-mono text-primary">
-              {tx.weight} WU
+              {0} WU
             </div>
           </SummaryTile>
           <SummaryTile label="TIMESTAMP">
             <div className="text-sm font-bold text-primary">
-              {formatDate(tx.time).split(",")[0]}
+              {formatDate(tx.blockTime).split(",")[0]}
             </div>
             <div className="text-xs text-outline">
-              {formatDate(tx.time).split(",")[1]?.trim()}
+              {formatDate(tx.blockTime).split(",")[1]?.trim()}
             </div>
           </SummaryTile>
           <SummaryTile label="INCLUDED IN BLOCK" className="lg:col-span-2">
             <div className="flex items-center justify-between mt-2">
               <Link
-                href={`/block/${tx.blockheight}`}
+                href={`/block/${tx.blockHeight}`}
                 className="text-xl font-semibold font-mono text-secondary"
               >
-                #{formatNumber(tx.blockheight)}
+                #{formatNumber(tx.blockHeight)}
               </Link>
               <ExternalLink className="h-5 w-5 text-outline" />
             </div>
@@ -170,7 +167,7 @@ export default function TransactionDetailPage() {
                 </svg>
               </div>
               <div className="text-xs font-mono font-semibold text-on-surface-variant">
-                {formatFloShort(tx.fee)}
+                {formatFloShort("0")}
               </div>
             </div>
             <div className="flex-1 flex flex-col items-start gap-2">
@@ -211,9 +208,9 @@ export default function TransactionDetailPage() {
                           <span className="text-[11px] font-bold tracking-[0.05em] uppercase text-on-surface-variant">
                             Coinbase
                           </span>
-                        ) : vin.addresses[0] ? (
-                          <Link href={`/address/${vin.addresses[0]}`}>
-                            {vin.addresses[0]}
+                        ) : vin.txid ? (
+                          <Link href={`/address/${vin.txid}`}>
+                            {vin.txid.slice(0, 12)}...
                           </Link>
                         ) : (
                           <span className="text-on-surface-variant">—</span>
@@ -221,7 +218,7 @@ export default function TransactionDetailPage() {
                       </div>
                     </div>
                     <span className="text-sm font-mono font-bold">
-                      {formatFloShort(vin.value)}
+                      {formatFloShort(vin.txid ? "0" : vin.coinbase || "0")}
                     </span>
                   </div>
                   <div className="p-3 bg-surface-container-lowest rounded border border-outline-variant/50">
@@ -263,11 +260,9 @@ export default function TransactionDetailPage() {
                         #{vout.n}
                       </span>
                       <div className="text-sm font-mono font-semibold text-secondary hover:underline cursor-pointer">
-                        {vout.scriptPubKey.addresses[0] ? (
-                          <Link
-                            href={`/address/${vout.scriptPubKey.addresses[0]}`}
-                          >
-                            {vout.scriptPubKey.addresses[0]}
+                        {vout.addresses?.[0] ? (
+                          <Link href={`/address/${vout.addresses?.[0]}`}>
+                            {vout.addresses?.[0]}
                           </Link>
                         ) : (
                           <span className="text-on-surface-variant">—</span>
@@ -283,7 +278,7 @@ export default function TransactionDetailPage() {
                       LOCKING SCRIPT (PKH)
                     </span>
                     <div className="text-[11px] font-semibold font-mono text-on-surface-variant break-all">
-                      {vout.scriptPubKey.asm}
+                      {vout.scriptPubKeyHex ?? ""}
                     </div>
                   </div>
                 </div>
@@ -335,15 +330,15 @@ function RawTransactionData({ tx }: { tx: any }) {
         value: parseFloat(v.value),
         n: v.n,
         scriptPubKey: {
-          asm: v.scriptPubKey.asm,
-          type: v.scriptPubKey.type,
-          address: v.scriptPubKey.addresses[0],
+          asm: v.scriptPubKeyHex ?? "",
+          type: v.scriptPubKeyType ?? "",
+          address: v.addresses?.[0] ?? "",
         },
       })),
-      blockhash: tx.blockhash,
+      blockhash: tx.blockHash,
       confirmations: tx.confirmations,
-      time: tx.time,
-      blocktime: tx.blocktime,
+      time: tx.blockTime,
+      blocktime: tx.blockTime,
     },
     null,
     2,

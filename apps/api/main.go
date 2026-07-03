@@ -92,6 +92,9 @@ func main() {
 
 	app.Get("/api/v1/search/:query", h.search)
 
+	app.Get("/api/v1/txs", h.getRecentTxs)
+	app.Get("/api/v1/network", h.getNetwork)
+
 	addr := cfg.APIHost + ":" + itoa(cfg.APIPort)
 
 	go func() {

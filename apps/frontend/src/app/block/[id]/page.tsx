@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getBlockByHash, getBlockByHeight } from "@/lib/flo-api";
+import type { BlockResponse } from "@/lib/flo-api";
 import { formatNumber, formatDate } from "@/lib/utils";
 
 export default function BlockDetailPage() {
@@ -68,9 +69,9 @@ export default function BlockDetailPage() {
             </div>
           </div>
           <div className="flex items-center bg-surface-container border border-outline-variant rounded-lg p-1.5 gap-1 shadow-sm">
-            {block.previousblockhash && (
+            {block.previousBlockHash && (
               <Link
-                href={`/block/${block.previousblockhash}`}
+                href={`/block/${block.previousBlockHash}`}
                 className="flex items-center gap-2 px-3 py-1.5 hover:bg-surface-container-highest rounded text-sm font-bold text-on-surface transition-all"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -78,9 +79,9 @@ export default function BlockDetailPage() {
               </Link>
             )}
             <div className="w-px h-4 bg-outline-variant mx-1" />
-            {block.nextblockhash && (
+            {block.nextBlockHash && (
               <Link
-                href={`/block/${block.nextblockhash}`}
+                href={`/block/${block.nextBlockHash}`}
                 className="flex items-center gap-2 px-3 py-1.5 hover:bg-surface-container-highest rounded text-sm font-bold text-on-surface transition-all"
               >
                 <span>Next</span>
@@ -130,7 +131,7 @@ export default function BlockDetailPage() {
               Difficulty
             </span>
             <p className="text-xl font-semibold">
-              {(block.difficulty / 1e12).toFixed(2)} T
+              {(parseFloat(block.difficulty) / 1e12).toFixed(2)} T
             </p>
             <div className="pt-2 text-xs text-on-secondary-container">
               <span className="flex items-center gap-1">
@@ -194,7 +195,7 @@ export default function BlockDetailPage() {
               Merkle Root
             </span>
             <p className="text-[11px] font-semibold font-mono break-all text-on-surface-variant">
-              {block.merkleroot}
+              {block.merkleRoot}
             </p>
           </div>
         </div>
@@ -204,7 +205,7 @@ export default function BlockDetailPage() {
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-semibold">Transactions</h2>
               <span className="bg-surface-container-highest text-on-surface px-2 py-0.5 rounded-full text-xs">
-                {formatNumber(block.nTx)} total
+                {formatNumber(block.txCount)} total
               </span>
             </div>
             <div className="flex gap-2">
@@ -261,7 +262,7 @@ export default function BlockDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant/30">
-                  {block.transactions.slice(0, 25).map((txid, i) => {
+                  {(block.transactions ?? []).slice(0, 25).map((txid, i) => {
                     const isCoinbase = i === 0;
                     return (
                       <tr
@@ -356,7 +357,7 @@ export default function BlockDetailPage() {
 
             <div className="flex flex-col md:flex-row justify-between items-center p-4 bg-surface-container-low border-t border-outline-variant gap-4">
               <div className="text-xs text-outline">
-                Showing 1-25 of {formatNumber(block.nTx)} transactions
+                Showing 1-25 of {formatNumber(block.txCount)} transactions
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
@@ -394,7 +395,7 @@ export default function BlockDetailPage() {
                   <div className="flex items-center px-4 gap-1">
                     <span className="text-xs font-bold">1</span>
                     <span className="text-xs text-outline">
-                      / {Math.ceil(block.nTx / 25)}
+                      / {Math.ceil((block.txCount || 0) / 25)}
                     </span>
                   </div>
                   <button

@@ -163,8 +163,11 @@ export default function AddressDetailPage() {
             icon="stats"
             className="text-tertiary-fixed-dim"
           >
-            <StatRow label="Total Txns" value={formatNumber(info.txCount)} />
-            <StatRow label="UTXO Count" value={formatNumber(info.utxoCount)} />
+            <StatRow label="Total Txns" value={formatNumber(info.txs)} />
+            <StatRow
+              label="UTXO Count"
+              value={formatNumber(utxos?.length ?? 0)}
+            />
           </StatsCard>
           <StatsCard
             label="TIMELINE"
@@ -211,26 +214,8 @@ export default function AddressDetailPage() {
                   </thead>
                   <tbody className="divide-y divide-outline-variant">
                     {txs?.items.map((tx) => {
-                      const isIn = tx.vin.some((v) =>
-                        v.addresses.some((a) => a === address),
-                      )
-                        ? false
-                        : tx.vout.some((v) =>
-                            v.scriptPubKey.addresses.some((a) => a === address),
-                          );
-                      const amount = isIn
-                        ? tx.vout
-                            .filter((v) =>
-                              v.scriptPubKey.addresses.some(
-                                (a) => a === address,
-                              ),
-                            )
-                            .reduce((s, v) => s + parseFloat(v.value), 0)
-                        : tx.vin
-                            .filter((v) =>
-                              v.addresses.some((a) => a === address),
-                            )
-                            .reduce((s, v) => s + parseFloat(v.value), 0);
+                      const amount = 0;
+                      const isIn = false;
                       return (
                         <tr
                           key={tx.txid}
@@ -245,18 +230,18 @@ export default function AddressDetailPage() {
                             </Link>
                           </td>
                           <td className="px-6 py-4 text-sm text-primary underline decoration-primary/30">
-                            <Link href={`/block/${tx.blockheight}`}>
-                              {formatNumber(tx.blockheight)}
+                            <Link href={`/block/${tx.blockHeight}`}>
+                              {formatNumber(tx.blockHeight)}
                             </Link>
                           </td>
                           <td className="px-6 py-4 text-xs text-on-surface-variant">
-                            {timeAgo(tx.time)}
+                            {timeAgo(tx.blockTime)}
                           </td>
                           <td className="px-6 py-4 text-sm font-mono font-semibold text-right text-primary">
                             {formatFloShort(amount.toString())}
                           </td>
                           <td className="px-6 py-4 text-xs font-mono font-semibold text-right text-on-surface-variant">
-                            {tx.fee}
+                            -
                           </td>
                           <td className="px-6 py-4">
                             <span
