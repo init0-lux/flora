@@ -16,7 +16,7 @@ const (
 	mempoolInterval = 10 * time.Second
 )
 
-// FLOClient defines the subset of flo.Client methods needed by the scanner.
+// interfacing the methods needed by scanner
 type FLOClient interface {
 	Ping(ctx context.Context) error
 	GetBestBlockHash(ctx context.Context) (string, error)
@@ -30,13 +30,11 @@ type FLOClient interface {
 	GetNetworkInfo(ctx context.Context) (*flo.NetworkInfo, error)
 }
 
-// EventPublisher is the subset of eventbus.Publisher needed by the scanner.
 type EventPublisher interface {
 	Publish(ctx context.Context, subject string, data []byte) error
 	Close() error
 }
 
-// Scanner watches a FLO node for new blocks and mempool changes.
 type Scanner struct {
 	flo     FLOClient
 	bus     EventPublisher
@@ -95,7 +93,15 @@ func (s *Scanner) initHeight(ctx context.Context) error {
 	return nil
 }
 
+// SetHeight overrides the scanner's current height. This is used for replay
+// support — when restarting from a persisted state, call this before Run().
+func (s *Scanner) SetHeight(height int64) {
+	s.height = height
+}
+
 // processNewBlocks fetches any new blocks and publishes block.connected events.
+// It detects reorgs by checking the previous hash of each new block against
+// the expected chain.
 func (s *Scanner) processNewBlocks(ctx context.Context) error {
 	count, err := s.flo.GetBlockCount(ctx)
 	if err != nil {
@@ -106,6 +112,22 @@ func (s *Scanner) processNewBlocks(ctx context.Context) error {
 		hash, err := s.flo.GetBlockHash(ctx, h)
 		if err != nil {
 			return fmt.Errorf("get block hash at %d: %w", h, err)
+		}
+
+		// Detect reorgs at the next height
+		if h == s.height+1 && s.height > 0 {
+			forkHeight, err := s.detectReorg(ctx, hash, h)
+			if err != nil {
+				return fmt.Errorf("detect reorg at %d: %w", h, err)
+			}
+			if forkHeight > 0 {
+				if err := s.handleReorg(ctx, forkHeight); err != nil {
+					return fmt.Errorf("handle reorg: %w", err)
+				}
+				// Continue to replay new blocks from fork height
+				h = s.height + 1
+				continue
+			}
 		}
 
 		block, err := s.flo.GetBlock(ctx, hash)
