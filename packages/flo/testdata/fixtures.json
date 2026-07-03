@@ -1,0 +1,7 @@
+{
+  "genesis_block_hash": "7f10867942541a9bc7fd58f32cff318c08a04df0e2e4aa12c782fbdc1fd3aa8e",
+  "genesis_block_height": 0,
+  "expected_chain": "main",
+  "known_block_hash": "7f10867942541a9bc7fd58f32cff318c08a04df0e2e4aa12c782fbdc1fd3aa8e",
+  "known_block_height": 1
+}
