@@ -1,5 +1,6 @@
 "use client";
 
+import Head from "next/head";
 import { useQuery } from "@tanstack/react-query";
 import { getNetworkStats, getMempoolInfo } from "@/lib/flo-api";
 import { formatNumber } from "@/lib/utils";
@@ -17,8 +18,17 @@ export default function NetworkHealthPage() {
     refetchInterval: 15_000,
   });
 
+  const title = "Network Overview | FLO Explorer";
+  const desc = `FLO blockchain network status — block height ${stats?.bestHeight ?? "..."}, mempool ${stats?.mempool?.size ?? 0} transactions, ${stats?.peerCount ?? 0} peers.`;
+
   return (
     <div className="space-y-6" style={{ backgroundColor: "#fff5e0" }}>
+      <Head>
+        <title>{title}</title>
+        <meta name="description" content={desc} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={desc} />
+      </Head>
       <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-4 md:py-8 space-y-6">
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-8 bg-surface border border-outline-variant rounded-xl p-6 relative overflow-hidden shadow-sm">

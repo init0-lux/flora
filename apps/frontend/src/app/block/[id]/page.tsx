@@ -1,5 +1,6 @@
 "use client";
 
+import Head from "next/head";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -32,11 +33,21 @@ export default function BlockDetailPage() {
     );
   }
 
+  const title = `Block #${formatNumber(block.height)} | FLO Explorer`;
+  const desc = `Block ${block.height} — ${formatNumber(block.txCount)} transactions, ${formatDate(block.time)}.`;
+
   const sizeMB = (block.size / (1024 * 1024)).toFixed(2);
   const capacityPct = Math.min(Math.round((block.size / 2000000) * 100), 100);
 
   return (
     <div className="space-y-6" style={{ backgroundColor: "#fff5e0" }}>
+      <Head>
+        <title>{title}</title>
+        <meta name="description" content={desc} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={desc} />
+        <meta property="og:type" content="website" />
+      </Head>
       <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-4 md:py-8 space-y-6">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="space-y-2">

@@ -1,5 +1,6 @@
 "use client";
 
+import Head from "next/head";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -53,8 +54,17 @@ export default function AddressDetailPage() {
 
   const totalPages = txs ? Math.ceil(txs.totalCount / 25) : 1;
 
+  const title = `Address ${address.slice(0, 12)}... | FLO Explorer`;
+  const desc = `Address ${address} — balance ${info.balance}, ${formatNumber(info.txs)} transactions.`;
+
   return (
     <div className="space-y-6" style={{ backgroundColor: "#fff5e0" }}>
+      <Head>
+        <title>{title}</title>
+        <meta name="description" content={desc} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={desc} />
+      </Head>
       <div className="max-w-[1600px] mx-auto px-4 md:px-8 py-4 md:py-8 space-y-6">
         <section className="bg-white border border-outline-variant rounded-xl p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">

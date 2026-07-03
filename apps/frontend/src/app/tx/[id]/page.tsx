@@ -1,5 +1,6 @@
 "use client";
 
+import Head from "next/head";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -50,11 +51,20 @@ export default function TransactionDetailPage() {
   const feeSats = fee * FLO_TO_SAT;
   const feeRate = tx.vsize > 0 ? (feeSats / tx.vsize).toFixed(1) : "0";
 
+  const title = `Transaction ${tx.txid.slice(0, 16)}... | FLO Explorer`;
+  const desc = `Transaction with ${tx.vin.length} inputs and ${tx.vout.length} outputs, ${formatNumber(tx.confirmations)} confirmations.`;
+
   return (
     <div
       className="min-h-screen flex flex-col"
       style={{ backgroundColor: "#fff5e0" }}
     >
+      <Head>
+        <title>{title}</title>
+        <meta name="description" content={desc} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={desc} />
+      </Head>
       <main className="flex-grow w-full max-w-[1600px] mx-auto px-8 py-8 space-y-6">
         <section className="space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
