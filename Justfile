@@ -52,10 +52,28 @@ migrate-status:
 sqlc-gen:
     sqlc generate
 
+# Frontend
+# Install frontend dependencies
+frontend-install:
+    cd apps/frontend && pnpm install
+
+# Start the frontend dev server
+frontend-dev:
+    cd apps/frontend && pnpm dev
+
+# Build the frontend
+frontend-build:
+    cd apps/frontend && pnpm build
+
+# Lint the frontend
+frontend-lint:
+    cd apps/frontend && pnpm lint
+
 # Clean build artifacts
 clean:
     rm -rf dist/
     go clean -cache
+    rm -rf apps/frontend/.next/
 
 # Show help
 help:

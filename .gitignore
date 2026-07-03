@@ -1,5 +1,4 @@
-
-# Environment.env
+# Environment
 .env.*
 !.env.example
 
@@ -20,14 +19,17 @@ out/
 .pnpm/
 pnpm-debug.log
 
-# Logs*.log
+# Logs
+*.log
 logs/
 
-# Database*.db
+# Database
+*.db
 *.sqlite
 *.sqlite3
 
-# IDE.vscode/
+# IDE
+.vscode/
 .idea/
 *.swp
 

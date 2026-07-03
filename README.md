@@ -95,7 +95,7 @@ apps/              # Runnable applications
 ├── chain-indexer/ # Blockchain scanner
 ├── state-writer/  # Event consumer / projection engine
 ├── admin/         # Admin interface (future)
-└── frontend/      # Next.js UI (future)
+├── frontend/      # Next.js UI (App Router, TanStack Query, Tailwind, shadcn/ui)
 
 packages/          # Shared Go libraries
 ├── config/        # Environment-based configuration
