@@ -20,6 +20,7 @@ export default function TxListPage() {
       const json = await res.json();
       return json as { items: TransactionResponse[]; itemsOnPage: number };
     },
+    refetchInterval: page === 1 ? 10000 : undefined,
   });
 
   const items = data?.items ?? [];
@@ -72,9 +73,22 @@ export default function TxListPage() {
                     <td className="py-3 px-4">
                       <Link
                         href={`/tx/${tx.txid}`}
-                        className="text-primary font-mono text-[13px] font-semibold hover:underline"
+                        className="group flex items-center gap-2"
                       >
-                        {truncateHash(tx.txid, 8)}
+                        <span className="font-mono text-[13px] text-primary font-semibold group-hover:underline">
+                          {truncateHash(tx.txid, 8)}
+                        </span>
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <svg
+                            className="h-4 w-4 text-outline animate-pulse"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path d="M7 17l9.2-9.2M17 17V7H7" />
+                          </svg>
+                        </span>
                       </Link>
                     </td>
                     <td className="py-3 px-4">

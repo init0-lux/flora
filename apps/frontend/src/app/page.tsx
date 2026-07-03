@@ -301,9 +301,24 @@ export default function HomePage() {
                       <td className="py-4 px-4">
                         <Link
                           href={`/block/${b.height}`}
-                          className="text-primary font-mono text-[13px] font-semibold leading-5"
+                          className="font-mono text-[13px] font-semibold leading-5"
                         >
-                          {b.height}
+                          <span className="flex items-center gap-2 group">
+                            <span className="text-primary group-hover:underline">
+                              {b.height}
+                            </span>
+                            <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <svg
+                                className="h-3 w-3 text-outline animate-pulse"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
+                                <path d="M7 17l9.2-9.2M17 17V7H7" />
+                              </svg>
+                            </span>
+                          </span>
                         </Link>
                         <div className="text-xs text-on-surface-variant font-mono text-[11px] leading-4 font-semibold">
                           {b.hash}
