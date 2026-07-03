@@ -63,7 +63,8 @@ func (h *handler) getTx(c *fiber.Ctx) error {
 		vouts = nil
 	}
 
-	height, err := h.db.GetLatestBlockHeight(ctx)
+	var height int64
+	height, err = h.db.GetLatestBlockHeight(ctx)
 	if err != nil {
 		height = 0
 	}

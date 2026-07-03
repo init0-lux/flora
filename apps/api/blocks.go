@@ -65,6 +65,7 @@ func (h *handler) getBlocks(c *fiber.Ctx) error {
 	page, limit := parsePagination(c)
 	offset := (page - 1) * limit
 
+	var height int64
 	height, err := h.db.GetLatestBlockHeight(context.Background())
 	if err != nil {
 		height = 0
